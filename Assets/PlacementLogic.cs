@@ -5,6 +5,7 @@ using UnityEngine.Events;
 using UnityEngine.XR.ARFoundation;
 using UnityEngine.XR.ARSubsystems;
 using UnityEngine.UI;
+using TMPro;
 
 /// <summary>
 // script houses main application logic and functions to be called by buttons
@@ -13,7 +14,7 @@ using UnityEngine.UI;
 
 /*******************************/
 // Current Bugs
-// Prefabs not placed with correct rotation. Use Quaterion rotations to adjust depending on object
+
 /******************************/
 
 
@@ -24,17 +25,21 @@ public class PlacementLogic : MonoBehaviour
     // Adding prefabs in placement script to reduce search times.
     // This is only freasable for a small finite number of objects
     [SerializeField]
-    GameObject trifoldPrefab;
+    private GameObject trifoldPrefab;
     [SerializeField]
-    GameObject ampPrefab;
+    private GameObject ampPrefab;
     [SerializeField]
-    GameObject treePrefab;
+    private GameObject treePrefab;
     [SerializeField]
-    GameObject podiumPrefab;
+    private GameObject podiumPrefab;
     [SerializeField]
     GameObject indicator;
     [SerializeField]
-    Text debugInfo;  // Infomation for the user on the status of placement, hosting, or resolving
+    private Text debugInfo;  // Infomation for the user on the status of placement, hosting, or resolving
+    [SerializeField]
+    private TMP_InputField idInput;
+    [SerializeField]
+    private TMP_InputField suitSelect;
 
     ARAnchorManager m_AnchorManager;
     ARRaycastManager m_RaycastManager; // This is so mother fucking important. THIS RUNS ALL OF THE RAYCASTING ACROSS ALL SCRIPTS. OBJECTS CANNOT HAVE POSITIONS IN THE WORLD WITHOUT THIS
@@ -45,8 +50,11 @@ public class PlacementLogic : MonoBehaviour
     
 
     public GameObject spawnedObject {get; private set;} // hold the most recently spawned object
+    public GameObject resolvedObject { get; private set; } // hold the resolved object
+    private ARCloudAnchor _localAnchor;
+    private bool hostLock = true;
+    private bool resolveLock = true;
     
-    Text objectSelector;
     void Awake()
     {
         m_RaycastManager = GetComponent<ARRaycastManager>();
@@ -68,14 +76,74 @@ public class PlacementLogic : MonoBehaviour
         hintPlaced.Add("Diamonds", false);
         adjustments.Add("Diamonds", (new Vector3(0,0,1), new Quaternion(0, 90, 0, 1)));
         
-
+        
 
     }
 
     // Update is called once per frame
     void Update()
     {
-            debugInfo.text = "IndX: " + indicator.transform.position.x + " IndY: " + indicator.transform.position.y + "\nObjX: " + spawnedObject.transform.position.x + " ObjY: " + spawnedObject.transform.position.y + " ObjZ: " + spawnedObject.transform.position.z;
+        if(_localAnchor && (!hostLock))
+        {
+            // Check cloud anchor state
+            CloudAnchorState cloudAnchorState = _localAnchor.cloudAnchorState;
+            if(cloudAnchorState == CloudAnchorState.Success)
+            {
+                debugInfo.text = "Success";
+                idInput.text = _localAnchor.cloudAnchorId;
+                hostLock = true;
+                _localAnchor = null;
+            }
+            else if(cloudAnchorState == CloudAnchorState.TaskInProgress)
+            {
+                // Wait, not done yet
+                debugInfo.text = "Hosting in progress";
+            }
+            else
+            {
+                debugInfo.text = "Hosting failed";
+            }
+
+        }
+        if(_localAnchor && (!resolveLock))
+        {
+            // Check cloud anchor state
+            CloudAnchorState cloudAnchorState = _localAnchor.cloudAnchorState;
+            if(cloudAnchorState == CloudAnchorState.Success)
+            {
+                debugInfo.text = "Success";
+                resolvedObject = Instantiate(hintObjects[suitSelect.text], _localAnchor.transform.position, _localAnchor.transform.rotation);
+                resolvedObject.transform.SetParent(_localAnchor.transform, false); // 2nd param false makes object keep local orientation rather than global
+                resolveLock = true;
+                _localAnchor = null;
+            }
+            else if(cloudAnchorState == CloudAnchorState.TaskInProgress)
+            {
+                // Wait, not done yet
+                debugInfo.text = "Resolving in progress";
+            }
+            else
+            {
+                debugInfo.text = "Resolve failed";
+            }
+        }
+        
+    }
+
+    public void Host()
+    {
+        debugInfo.text = "Attemping host";
+        _localAnchor = m_AnchorManager.HostCloudAnchor(spawnedObject.GetComponent<ARAnchor>(), 1);
+        hostLock = false;
+        
+    }
+
+        public void Resolve()
+    {
+        debugInfo.text = "Attempting resolve";
+        _localAnchor = m_AnchorManager.ResolveCloudAnchorId(idInput.text);
+        resolveLock = false;
+        
     }
 
     public void PlaceObject(string item)
