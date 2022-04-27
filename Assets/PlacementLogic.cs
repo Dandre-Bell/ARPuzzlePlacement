@@ -42,7 +42,7 @@ public class PlacementLogic : MonoBehaviour
     private TMP_InputField suitSelect;
 
     ARAnchorManager m_AnchorManager;
-    ARRaycastManager m_RaycastManager; // This is so mother fucking important. THIS RUNS ALL OF THE RAYCASTING ACROSS ALL SCRIPTS. OBJECTS CANNOT HAVE POSITIONS IN THE WORLD WITHOUT THIS
+    ARRaycastManager m_RaycastManager; // This is important. THIS RUNS ALL OF THE RAYCASTING ACROSS ALL SCRIPTS. OBJECTS CANNOT HAVE POSITIONS IN THE WORLD WITHOUT THIS
     // Dictionary to enable object selection via dropdown menu
     Dictionary<string, GameObject> hintObjects = new Dictionary<string, GameObject>();
     Dictionary<string, bool> hintPlaced = new Dictionary<string, bool>(); // Control to prevent double placement
