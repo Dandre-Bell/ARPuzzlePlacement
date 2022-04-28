@@ -44,7 +44,7 @@ public class PlacementLogic : MonoBehaviour
     ARAnchorManager m_AnchorManager;
     ARRaycastManager m_RaycastManager; // This is important. THIS RUNS ALL OF THE RAYCASTING ACROSS ALL SCRIPTS. OBJECTS CANNOT HAVE POSITIONS IN THE WORLD WITHOUT THIS
     // Dictionary to enable object selection via dropdown menu
-    Dictionary<string, GameObject> hintObjects = new Dictionary<string, GameObject>();
+    Dictionary<string, GameObject> hintObjects = new Dictionary<string, GameObject>(); // Contains the objects to be placed
     Dictionary<string, bool> hintPlaced = new Dictionary<string, bool>(); // Control to prevent double placement
     Dictionary<string, (Vector3, Quaternion)> adjustments = new Dictionary<string, (Vector3, Quaternion)>(); // Positional and Rotational adjustments for each object
     
